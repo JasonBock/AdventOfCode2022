@@ -55,7 +55,7 @@ public static class SolutionDay24
                             newGrid[x, (y + maxY - 1) % maxY].Add(blizzard);
                         }
 
-                        blizzards.RemoveAt(b);
+								blizzards.RemoveAt(b);
                     }
                 }
             }
@@ -143,17 +143,149 @@ public static class SolutionDay24
                 expeditions = expeditions.OrderBy(_ => int.Abs(_.X - (maxX - 1)) + _.Y)
                     .ThenBy(_ => _.NumberOfMoves).Take(PruningSize).ToList();
             }
-
-            //if (expeditions.Count == 0)
-            //{
-            //    throw new UnreachableException("No expeditions.");
-            //}
-
-            Console.WriteLine($"Minute {minutes}, expedition count: {expeditions.Count}");
         }
     }
 
-    public static long GetMinimumMinutesFullExpedition(string[] input)
+	 public static long GetMinimumMinutesOptimized(string[] input)
+	 {
+		  // Remember to reverse the input.
+		  // I'm also assuming the input has the '#' stripped off
+		  var grid = SolutionDay24.ParseOptimized(input.Reverse().ToArray());
+		  var maxY = grid.GetLength(1);
+		  var maxX = grid.GetLength(0);
+		  var expeditions = new List<Expedition>();
+		  var minutes = 0L;
+
+		  while (true)
+		  {
+				minutes++;
+
+				// Move all the blizzards around, but you can't overwrite what is there.
+				var newGrid = new BlizzardDirection[maxX, maxY];
+
+				for (var y = 0; y < maxY; y++)
+				{
+					 for (var x = 0; x < maxX; x++)
+					 {
+						  var blizzards = grid[x, y];
+
+						  if(blizzards.HasFlag(BlizzardDirection.Right))
+						  {
+								// we go right.
+								newGrid[(x + 1) % maxX, y] = newGrid[(x + 1) % maxX, y] | BlizzardDirection.Right;
+								grid[x, y] = grid[x, y] ^ BlizzardDirection.Right;
+						  }
+
+						  if (blizzards.HasFlag(BlizzardDirection.Left))
+						  {
+								// we go left.
+								newGrid[(x + maxX - 1) % maxX, y] = newGrid[(x + maxX - 1) % maxX, y] | BlizzardDirection.Left;
+								grid[x, y] = grid[x, y] ^ BlizzardDirection.Left;
+						  }
+
+						  if (blizzards.HasFlag(BlizzardDirection.Up))
+						  {
+								// we go up.
+								newGrid[x, (y + 1) % maxY] = newGrid[x, (y + 1) % maxY] | BlizzardDirection.Up;
+								grid[x, y] = grid[x, y] ^ BlizzardDirection.Up;
+						  }
+
+						  if (blizzards.HasFlag(BlizzardDirection.Down))
+						  {
+								// we go down.
+								newGrid[x, (y + maxY - 1) % maxY] = newGrid[x, (y + maxY - 1) % maxY] | BlizzardDirection.Down;
+								grid[x, y] = grid[x, y] ^ BlizzardDirection.Down;
+						  }
+					 }
+				}
+
+				grid = newGrid;
+
+				var newExpeditions = new List<Expedition>();
+
+				// Check to see if the start position is open.
+				// This is assuming that the current expedition has been
+				// waiting until now (for some reason) to start.
+				if (grid[0, maxY - 1] == BlizzardDirection.None)
+				{
+					 newExpeditions.Add(new Expedition(0, maxY - 1, minutes));
+				}
+
+				for (var e = expeditions.Count - 1; e >= 0; e--)
+				{
+					 var expedition = expeditions[e];
+
+					 // Can it go right?
+					 if (expedition.X <= (maxX - 2) && grid[expedition.X + 1, expedition.Y] == BlizzardDirection.None)
+					 {
+						  if (expedition.X + 1 == maxX - 1 && expedition.Y == 0)
+						  {
+								// +2, because you need to move, and then the next move would finish.
+								return expedition.NumberOfMoves + 2;
+						  }
+
+						  newExpeditions.Add(new Expedition(expedition.X + 1, expedition.Y, minutes));
+					 }
+
+					 // Can it go left?
+					 if (expedition.X >= 1 && grid[expedition.X - 1, expedition.Y] == BlizzardDirection.None)
+					 {
+						  newExpeditions.Add(new Expedition(expedition.X - 1, expedition.Y, minutes));
+					 }
+
+					 // Can it go up?
+					 if (expedition.Y <= (maxY - 2) && grid[expedition.X, expedition.Y + 1] == BlizzardDirection.None)
+					 {
+						  newExpeditions.Add(new Expedition(expedition.X, expedition.Y + 1, minutes));
+					 }
+
+					 // Can it go down?
+					 if (expedition.Y >= 1 && grid[expedition.X, expedition.Y - 1] == BlizzardDirection.None)
+					 {
+						  if (expedition.X == maxX - 1 && expedition.Y - 1 == 0)
+						  {
+								// +2, because you need to move, and then the next move would finish.
+								return expedition.NumberOfMoves + 2;
+						  }
+
+						  newExpeditions.Add(new Expedition(expedition.X, expedition.Y - 1, minutes));
+					 }
+
+					 // Can it stay where it is?
+					 if (grid[expedition.X, expedition.Y] != BlizzardDirection.None)
+					 {
+						  // Remove it, there's a blizzard here.
+						  expeditions.RemoveAt(e);
+					 }
+					 else
+					 {
+						  // It's staying, so increase its' move count
+						  expedition.NumberOfMoves++;
+					 }
+				}
+
+				expeditions.AddRange(newExpeditions);
+
+				// It's possible that we may have duplicates -
+				// i.e. expeditions at the same spot that haven't moved,
+				// or expeditions that just have the same location with the same amount of moves.
+				// We only want unique expeditions.
+				expeditions = new HashSet<Expedition>(expeditions).ToList();
+
+				const int PruningSize = 500_000;
+
+				// Prune the expedition list if it gets too long.
+				// Order by those that are closet to the end,
+				// and then have the shortest amount of time on the grid.
+				if (expeditions.Count > PruningSize)
+				{
+					 expeditions = expeditions.OrderBy(_ => int.Abs(_.X - (maxX - 1)) + _.Y)
+						  .ThenBy(_ => _.NumberOfMoves).Take(PruningSize).ToList();
+				}
+		  }
+	 }
+	 
+	 public static long GetMinimumMinutesFullExpedition(string[] input)
     {
         // Remember to reverse the input.
         // I'm also assuming the input has the '#' stripped off
@@ -414,6 +546,31 @@ public static class SolutionDay24
 
         return grid;
     }
+
+	 public static BlizzardDirection[,] ParseOptimized(string[] input)
+	 {
+		  var grid = new BlizzardDirection[input[0].Length, input.Length];
+
+		  for (var y = 0; y < input.Length; y++)
+		  {
+				var line = input[y];
+
+				for (var x = 0; x < line.Length; x++)
+				{
+					 grid[x, y] = line[x] switch
+					 {
+						  '>' => BlizzardDirection.Right,
+						  '<' => BlizzardDirection.Left,
+						  '^' => BlizzardDirection.Up,
+						  'v' => BlizzardDirection.Down,
+						  '.' => BlizzardDirection.None,
+						  _ => throw new UnreachableException()
+					 };
+				}
+		  }
+
+		  return grid;
+	 }
 }
 
 public sealed class Expedition
@@ -467,4 +624,14 @@ public sealed class FullExpedition
 
     public override int GetHashCode() =>
         HashCode.Combine(this.X, this.Y, this.NumberOfMoves, this.ReachedBeginning, this.ReachedEnd);
+}
+
+[Flags]
+public enum BlizzardDirection
+{
+	 None = 0b_0000,
+	 Left = 0b_0001,
+	 Right = 0b_0010,
+	 Up = 0b_0100,
+	 Down = 0b_1000
 }

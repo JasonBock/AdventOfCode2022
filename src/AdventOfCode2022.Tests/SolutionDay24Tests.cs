@@ -46,7 +46,22 @@ public static class SolutionDay24Tests
         Assert.Equal(18, minimumMinutes);
     }
 
-    [Fact]
+	 [Fact]
+	 public static void GetMinimumMinutesOptimized()
+	 {
+		  var input = new[]
+		  {
+				">>.<^<",
+				".<..<<",
+				">v.><>",
+				"<^v^^>",
+		  };
+
+		  var minimumMinutes = SolutionDay24.GetMinimumMinutesOptimized(input);
+		  Assert.Equal(18, minimumMinutes);
+	 }
+	 
+	 [Fact]
     public static void GetMinimumMinutesFullExpedition()
     {
         var input = new[]

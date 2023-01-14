@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AdventOfCode2022.Day23;
 
@@ -64,8 +65,6 @@ public static class SolutionDay23
                 return turn;
             }
 
-            Console.WriteLine($"Turn: {turn}, elves: {elves.Count}, count: {elves.Count(_ => _.ProposedLocation is not null)}");
-
             // Second half: execution
             SolutionDay23.ExecuteProposals(elves);
 
@@ -82,7 +81,42 @@ public static class SolutionDay23
         }
     }
 
-    public static void ExecuteProposals(ImmutableList<Elf> elves)
+	 public static async Task<long> GetNoMovementTurnOptimizedAsync(string[] input)
+	 {
+		  var elves = GetElves(input);
+		  var proposals = new Proposals();
+
+		  var turn = 1L;
+
+		  while (true)
+		  {
+				var options = new ParallelOptions();
+
+				// First half: proposals
+				await Parallel.ForEachAsync(elves, async (elf, token) => proposals.MakeProposal(elf, elves));
+
+				if (!elves.Any(_ => _.ProposedLocation is not null))
+				{
+					 return turn;
+				}
+
+				// Second half: execution
+				SolutionDay23.ExecuteProposals(elves);
+
+				// Rotate direction consideration
+				proposals.Rotate();
+
+				// Clear out proposals.
+				foreach (var elf in elves)
+				{
+					 elf.ProposedLocation = null;
+				}
+
+				turn++;
+		  }
+	 }
+	 
+	 public static void ExecuteProposals(ImmutableList<Elf> elves)
     {
         foreach (var elf in elves)
         {

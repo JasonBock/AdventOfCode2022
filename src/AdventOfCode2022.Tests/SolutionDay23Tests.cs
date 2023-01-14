@@ -199,4 +199,22 @@ public static class SolutionDay23Tests
         var noMovementTurn = SolutionDay23.GetNoMovementTurn(input);
         Assert.Equal(20, noMovementTurn);
     }
+
+	 [Fact]
+	 public static async Task GetNoMovementTurnOptimizedAsync()
+	 {
+		  var input = new[]
+		  {
+				"....#..",
+				"..###.#",
+				"#...#.#",
+				".#...##",
+				"#.###..",
+				"##.#.##",
+				".#..#..",
+		  };
+
+		  var noMovementTurn = await SolutionDay23.GetNoMovementTurnOptimizedAsync(input);
+		  Assert.Equal(20, noMovementTurn);
+	 }
 }
