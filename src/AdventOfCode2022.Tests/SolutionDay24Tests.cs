@@ -62,6 +62,59 @@ public static class SolutionDay24Tests
 	 }
 
 	 [Fact]
+	 public static void GetMinimumMinutesOptimizedOneGrid()
+	 {
+		  var input = new[]
+		  {
+				">>.<^<",
+				".<..<<",
+				">v.><>",
+				"<^v^^>",
+		  };
+
+		  var minimumMinutes = SolutionDay24.GetMinimumMinutesOptimizedOneGrid(input);
+		  Assert.Equal(18, minimumMinutes);
+	 }
+
+	 [Fact]
+	 public static void UpdateGridOptimizedOneGrid()
+	 {
+		  var input = new[]
+		  {
+				">>.<^<",
+				".<..<<",
+				">v.><>",
+				"<^v^^>",
+		  };
+
+		  var optimizedGrid = SolutionDay24.ParseOptimized(input.Reverse().ToArray());
+
+		  for(var i = 0; i < 18; i++)
+		  {
+				optimizedGrid = SolutionDay24.UpdateBlizzardsOptimized(optimizedGrid);
+		  }
+
+		  var (oneGrid, xLength) = SolutionDay24.ParseOptimizedOneGrid(input.Reverse().ToArray());
+
+		  for (var i = 0; i < 18; i++)
+		  {
+				SolutionDay24.UpdateBlizzardsOptimizedOneGrid(oneGrid, xLength);
+		  }
+	 }
+
+	 [Fact]
+	 public static void ParseOptimizedOneGridFirstRow()
+	 {
+		  var input = new[] { ">>.<^<" };
+		  var (grid, xLength) = SolutionDay24.ParseOptimizedOneGrid(input);
+
+		  Assert.Equal(6, xLength);
+		  Assert.Equal(2, grid.Length);
+		  Assert.Equal(0b0000_0001_0000_0000_0000_0010_0000_0010u, grid[0, 0]);
+		  Assert.Equal(0b0000_0000_0000_0000_0000_0001_0000_0100u, grid[1, 0]);
+	 }
+
+	 [Fact]
 	 public static void ParseOptimizedOneGridEvenDistribution()
 	 {
 		  var input = new[] { ">>.<^v.>" };

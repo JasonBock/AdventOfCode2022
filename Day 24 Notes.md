@@ -48,3 +48,33 @@ Then, I go through the array again, and for each element, I clear out the "old" 
 Then I can move to making decisions about whether a party can move into a new cell. These are in the "current" location bit areas of the `uint` value.
 
 Again, the end result of this is that I don't have to create a new grid every time I iterate. I wish I didn't have to go through the array again to shift the "new" bits to "current", but I don't see another way to do that cleanly.
+
+"1_0000_0000_0000_0000_0000_0000"
+
+Side note: I think if you let the `uint` store 3 8-bit sets, you could another bit to state whether it was cleared or not, which would remove the need to do another iteration on the elements. But that's not something I'm going to try...really :).
+
+"1_0000_0000_0000_0010_0000_0010"
+
+Side note 2: I should create a formatter to get the bits, **all** of them, and put separators at every 4th location (or defined by the user)
+
+optimizedGrid
+
+"0000_0001_0000_0000_0000_1010_0000_0010" "0000_0000_0000_0000_0000_0001_0000_0000"
+
+"0000_0100_0000_1000_0000_0101_0000_0000" "0000_0000_0000_0000_0000_0001_0000_0101"
+
+"0000_0010_0000_0000_0000_0000_0000_0010" "0000_0000_0000_0000_0000_0010_0000_0101"
+
+"0000_0000_0000_0000_0000_0000_0000_0001" "0000_0000_0000_0000_0000_0010_0000_0000"
+
+oneGrid
+
+"0000_0001_0000_0000_0000_1010_0000_0010" "0000_0000_0000_0000_0000_0001_0000_0000"
+
+"0000_0100_0000_1000_0000_0101_0000_0000" "0000_0000_0000_0000_0000_0001_0000_0101"
+
+"0000_0010_0000_0000_0000_0000_0000_0010" "0000_0000_0000_0000_0000_0010_0000_0101"
+
+"0000_0000_0000_0000_0000_0000_0000_0001" "0000_0000_0000_0000_0000_0010_0000_0000"
+
+OK, it looks like the blizzard grid is working just fine. So it's gotta be the expeditions logic.

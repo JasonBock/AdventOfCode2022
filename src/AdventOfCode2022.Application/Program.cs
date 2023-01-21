@@ -438,6 +438,8 @@ static void RunDay24()
 	 Console.WriteLine($"Minimum minutes: {minimumMinutes}");
 	 var minimumMinutesOptimized = SolutionDay24.GetMinimumMinutesOptimized(input);
 	 Console.WriteLine($"Minimum minutes (optimized): {minimumMinutesOptimized}");
+	 var minimumMinutesOptimizedOneGrid = SolutionDay24.GetMinimumMinutesOptimizedOneGrid(input);
+	 Console.WriteLine($"Minimum minutes (optimized, one grid): {minimumMinutesOptimizedOneGrid}");
 	 //var minimumMinutesFullExpedition = SolutionDay24.GetMinimumMinutesFullExpedition(input);
 	 //Console.WriteLine($"Minimum minutes - full expedition: {minimumMinutesFullExpedition}");
 }
