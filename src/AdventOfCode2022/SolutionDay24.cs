@@ -7,7 +7,13 @@ namespace AdventOfCode2022.Day24;
 
 public static class SolutionDay24
 {
-    public static long GetMinimumMinutes(string[] input)
+	 public const uint BlizzardDirectionLeft = 0b_0001;
+	 public const uint BlizzardDirectionRight = 0b_0010;
+	 public const uint BlizzardDirectionUp = 0b_0100;
+	 public const uint BlizzardDirectionDown = 0b_1000;
+	 public const uint ClearCurrentMask = 0b11110000_11110000_11110000_11110000;
+	 
+	 public static long GetMinimumMinutes(string[] input)
     {
         // Remember to reverse the input.
         // I'm also assuming the input has the '#' stripped off
@@ -284,7 +290,178 @@ public static class SolutionDay24
 				}
 		  }
 	 }
-	 
+
+	 public static long GetMinimumMinutesOptimizedOneGrid(string[] input)
+	 {
+		  // Remember to reverse the input.
+		  // I'm also assuming the input has the '#' stripped off
+		  var (grid, xLength) = SolutionDay24.ParseOptimizedOneGrid(input.Reverse().ToArray());
+		  var maxY = grid.GetLength(1);
+		  var maxX = grid.GetLength(0);
+		  var expeditions = new List<Expedition>();
+		  var minutes = 0L;
+
+		  while (true)
+		  {
+				minutes++;
+
+				// Move all the blizzards around to the "new" bit sections.
+
+				for (var y = 0; y < maxY; y++)
+				{
+					 for (var x = 0; x < maxX; x++)
+					 {
+						  var blizzards = grid[x, y];
+						  var bLimit = xLength >= (x * 4) ? 4 : (x * 4) - xLength;
+
+						  for (var b = 0; b < bLimit; b++)
+						  {
+								if((blizzards & (SolutionDay24.BlizzardDirectionRight << (b * 8))) > 0)
+								{
+									 // We go right.
+									 var (q, r) = int.DivRem(((x * 4) + b + 1) % xLength, 4);
+									 grid[q, y] = grid[q, y] | (SolutionDay24.BlizzardDirectionRight << ((r * 8) + 4));
+								}
+
+								if ((blizzards & (SolutionDay24.BlizzardDirectionLeft << (b * 8))) > 0)
+								{
+									 // We go left.
+									 var (q, r) = int.DivRem(((x * 4) + b + xLength - 1) % xLength, 4);
+									 grid[q, y] = grid[q, y] | (SolutionDay24.BlizzardDirectionLeft << ((r * 8) + 4));
+								}
+
+								if ((blizzards & (SolutionDay24.BlizzardDirectionUp << (b * 8))) > 0)
+								{
+									 // We go up.
+									 grid[x, (y + 1) % maxY] = grid[x, (y + 1) % maxY] | (SolutionDay24.BlizzardDirectionUp << ((b * 8) + 4));
+								}
+
+								if ((blizzards & (SolutionDay24.BlizzardDirectionDown << (b * 8))) > 0)
+								{
+									 // We go down.
+									 grid[x, (y + maxY - 1) % maxY] = grid[x, (y + maxY - 1) % maxY] | (SolutionDay24.BlizzardDirectionDown << ((b * 8) + 4));
+								}
+						  }
+					 }
+				}
+
+				// Now clear out all the "current" bits, and move all of the "new" bits to the "current" bit locations
+				for (var y = 0; y < maxY; y++)
+				{
+					 for (var x = 0; x < maxX; x++)
+					 {
+						  grid[x, y] = (grid[x, y] & SolutionDay24.ClearCurrentMask) >>> 4;
+					 }
+				}
+
+				var newExpeditions = new List<Expedition>();
+
+				// Check to see if the start position is open.
+				// This is assuming that the current expedition has been
+				// waiting until now (for some reason) to start.
+				if ((grid[0, maxY - 1] & 0b_1111) == 0)
+				{
+					 newExpeditions.Add(new Expedition(0, maxY - 1, minutes));
+				}
+
+				for (var e = expeditions.Count - 1; e >= 0; e--)
+				{
+					 var expedition = expeditions[e];
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X + 1, 4);
+
+						  // Can it go right?
+						  if (expedition.X <= (xLength - 2) &&
+								(grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								if (expedition.X + 1 == xLength - 1 && expedition.Y == 0)
+								{
+									 // +2, because you need to move, and then the next move would finish.
+									 return expedition.NumberOfMoves + 2;
+								}
+
+								newExpeditions.Add(new Expedition(expedition.X + 1, expedition.Y, minutes));
+						  }
+					 }
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X - 1, 4);
+
+						  // Can it go left?
+						  if (expedition.X >= 1 && 
+								(grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								newExpeditions.Add(new Expedition(expedition.X - 1, expedition.Y, minutes));
+						  }
+					 }
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X, 4);
+
+						  // Can it go up?
+						  if (expedition.Y <= (maxY - 2) && 
+								(grid[expeditionQuotient, expedition.Y + 1] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								newExpeditions.Add(new Expedition(expedition.X, expedition.Y + 1, minutes));
+						  }
+					 }
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X, 4);
+
+						  // Can it go down?
+						  if (expedition.Y >= 1 && 
+								(grid[expeditionQuotient, expedition.Y - 1] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								if (expedition.X == xLength - 1 && expedition.Y - 1 == 0)
+								{
+									 // +2, because you need to move, and then the next move would finish.
+									 return expedition.NumberOfMoves + 2;
+								}
+
+								newExpeditions.Add(new Expedition(expedition.X, expedition.Y - 1, minutes));
+						  }
+					 }
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X, 4);
+
+						  // Can it stay where it is?
+						  if ((grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								// Remove it, there's a blizzard here.
+								expeditions.RemoveAt(e);
+						  }
+						  else
+						  {
+								// It's staying, so increase its' move count
+								expedition.NumberOfMoves++;
+						  }
+					 }
+				}
+
+				expeditions.AddRange(newExpeditions);
+
+				// It's possible that we may have duplicates -
+				// i.e. expeditions at the same spot that haven't moved,
+				// or expeditions that just have the same location with the same amount of moves.
+				// We only want unique expeditions.
+				expeditions = new HashSet<Expedition>(expeditions).ToList();
+
+				const int PruningSize = 500_000;
+
+				// Prune the expedition list if it gets too long.
+				// Order by those that are closet to the end,
+				// and then have the shortest amount of time on the grid.
+				if (expeditions.Count > PruningSize)
+				{
+					 expeditions = expeditions.OrderBy(_ => int.Abs(_.X - (maxX - 1)) + _.Y)
+						  .ThenBy(_ => _.NumberOfMoves).Take(PruningSize).ToList();
+				}
+		  }
+	 }
+
 	 public static long GetMinimumMinutesFullExpedition(string[] input)
     {
         // Remember to reverse the input.
@@ -570,6 +747,35 @@ public static class SolutionDay24
 		  }
 
 		  return grid;
+	 }
+
+	 public static (uint[,] grid, int xLength) ParseOptimizedOneGrid(string[] input)
+	 {
+		  var (quotient, remainder) = uint.DivRem((uint)input[0].Length, 4);
+
+		  var grid = new uint[remainder > 0 ? quotient + 1 : quotient, input.Length];
+
+		  for (var y = 0; y < input.Length; y++)
+		  {
+				var line = input[y];
+
+				for (var x = 0; x < line.Length; x++)
+				{
+					 var (xQuotient, xRemainder) = int.DivRem(x, 4);
+
+					 grid[xQuotient, y] = line[x] switch
+					 {
+						  '>' => grid[xQuotient, y] | (SolutionDay24.BlizzardDirectionRight << (xRemainder * 8)),
+						  '<' => grid[xQuotient, y] | (SolutionDay24.BlizzardDirectionLeft << (xRemainder * 8)),
+						  '^' => grid[xQuotient, y] | (SolutionDay24.BlizzardDirectionUp << (xRemainder * 8)),
+						  'v' => grid[xQuotient, y] | (SolutionDay24.BlizzardDirectionDown << (xRemainder * 8)),
+						  '.' => grid[xQuotient, y],
+						  _ => throw new UnreachableException()
+					 };
+				}
+		  }
+
+		  return (grid, input[0].Length);
 	 }
 }
 
