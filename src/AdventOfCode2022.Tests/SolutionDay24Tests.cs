@@ -77,6 +77,21 @@ public static class SolutionDay24Tests
 	 }
 
 	 [Fact]
+	 public static void GetMinimumMinutesOptimizedOneGridUsingOneHashSet()
+	 {
+		  var input = new[]
+		  {
+				">>.<^<",
+				".<..<<",
+				">v.><>",
+				"<^v^^>",
+		  };
+
+		  var minimumMinutes = SolutionDay24.GetMinimumMinutesOptimizedOneGridUsingOneHashSet(input);
+		  Assert.Equal(18, minimumMinutes);
+	 }
+
+	 [Fact]
 	 public static void UpdateGridOptimizedOneGrid()
 	 {
 		  var input = new[]

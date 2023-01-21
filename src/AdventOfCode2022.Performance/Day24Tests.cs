@@ -20,4 +20,12 @@ public class Day24Tests
 	 [Benchmark]
 	 public long GetMinimumMinutesOptimized() =>
 		  SolutionDay24.GetMinimumMinutesOptimized(this.input);
+
+	 [Benchmark]
+	 public long GetMinimumMinutesOptimizedOneGrid() =>
+		  SolutionDay24.GetMinimumMinutesOptimizedOneGrid(this.input);
+
+	 [Benchmark]
+	 public long GetMinimumMinutesOptimizedOneGridUsingOneHashSet() =>
+		  SolutionDay24.GetMinimumMinutesOptimizedOneGridUsingOneHashSet(this.input);
 }

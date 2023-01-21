@@ -1,4 +1,4 @@
 ﻿using AdventOfCode2022.Performance;
 using BenchmarkDotNet.Running;
 
-BenchmarkRunner.Run<Day23Tests>();
+BenchmarkRunner.Run<Day24Tests>();

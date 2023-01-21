@@ -78,3 +78,19 @@ oneGrid
 "0000_0000_0000_0000_0000_0000_0000_0001" "0000_0000_0000_0000_0000_0010_0000_0000"
 
 OK, it looks like the blizzard grid is working just fine. So it's gotta be the expeditions logic.
+
+This was the culprit:
+
+```
+// Can it stay where it is?
+if ((grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) == 0)
+```
+
+It should have been:
+
+```
+// Can it stay where it is?
+if ((grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) > 0)
+```
+
+Note the change from `==` to `>`

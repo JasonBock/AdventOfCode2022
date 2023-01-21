@@ -470,6 +470,106 @@ public static class SolutionDay24
 		  }
 	 }
 
+	 public static long GetMinimumMinutesOptimizedOneGridUsingOneHashSet(string[] input)
+	 {
+		  // Remember to reverse the input.
+		  // I'm also assuming the input has the '#' stripped off
+		  var (grid, xLength) = SolutionDay24.ParseOptimizedOneGrid(input.Reverse().ToArray());
+		  var maxY = grid.GetLength(1);
+		  var maxX = grid.GetLength(0);
+		  var expeditions = new List<Expedition>();
+		  var minutes = 0L;
+
+		  while (true)
+		  {
+				minutes++;
+
+				// Move all the blizzards around to the "new" bit sections.
+				SolutionDay24.UpdateBlizzardsOptimizedOneGrid(grid, xLength);
+
+				var newExpeditions = new HashSet<Expedition>();
+
+				// Check to see if the start position is open.
+				// This is assuming that the current expedition has been
+				// waiting until now (for some reason) to start.
+				if ((grid[0, maxY - 1] & 0b_1111) == 0)
+				{
+					 newExpeditions.Add(new Expedition(0, maxY - 1, minutes));
+				}
+
+				for (var e = expeditions.Count - 1; e >= 0; e--)
+				{
+					 var expedition = expeditions[e];
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X + 1, 4);
+
+						  // Can it go right?
+						  if (expedition.X <= (xLength - 2) &&
+								(grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								if (expedition.X + 1 == xLength - 1 && expedition.Y == 0)
+								{
+									 // +2, because you need to move, and then the next move would finish.
+									 return expedition.NumberOfMoves + 2;
+								}
+
+								newExpeditions.Add(new Expedition(expedition.X + 1, expedition.Y, minutes));
+						  }
+					 }
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X - 1, 4);
+
+						  // Can it go left?
+						  if (expedition.X >= 1 &&
+								(grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								newExpeditions.Add(new Expedition(expedition.X - 1, expedition.Y, minutes));
+						  }
+					 }
+
+					 {
+						  var (expeditionQuotient, expeditionRemainder) = int.DivRem(expedition.X, 4);
+
+						  // Can it go up?
+						  if (expedition.Y <= (maxY - 2) &&
+								(grid[expeditionQuotient, expedition.Y + 1] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								newExpeditions.Add(new Expedition(expedition.X, expedition.Y + 1, minutes));
+						  }
+
+						  // Can it go down?
+						  if (expedition.Y >= 1 &&
+								(grid[expeditionQuotient, expedition.Y - 1] & (0b1111 << expeditionRemainder * 8)) == 0)
+						  {
+								if (expedition.X == xLength - 1 && expedition.Y - 1 == 0)
+								{
+									 // +2, because you need to move, and then the next move would finish.
+									 return expedition.NumberOfMoves + 2;
+								}
+
+								newExpeditions.Add(new Expedition(expedition.X, expedition.Y - 1, minutes));
+						  }
+
+						  // Can it stay where it is?
+						  if ((grid[expeditionQuotient, expedition.Y] & (0b1111 << expeditionRemainder * 8)) > 0)
+						  {
+								// Remove it, there's a blizzard here.
+								expeditions.RemoveAt(e);
+						  }
+						  else
+						  {
+								// It's staying, so increase its' move count
+								expedition.NumberOfMoves++;
+						  }
+					 }
+				}
+
+				expeditions.AddRange(newExpeditions);
+		  }
+	 }
+
 	 public static long GetMinimumMinutesFullExpedition(string[] input)
 	 {
 		  // Remember to reverse the input.
